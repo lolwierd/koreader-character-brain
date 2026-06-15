@@ -1,0 +1,29 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify tag matches plugin version
+        shell: bash
+        run: |
+          version="$(sed -n 's/.*version = "\([^"]*\)".*/\1/p' characterbrain.koplugin/_meta.lua)"
+          test "v${version}" = "${GITHUB_REF_NAME}"
+
+      - name: Package plugin
+        run: zip -Xr9 characterbrain.koplugin.zip characterbrain.koplugin
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "${GITHUB_REF_NAME}" characterbrain.koplugin.zip --generate-notes

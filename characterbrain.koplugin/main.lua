@@ -6,6 +6,7 @@ local LuaSettings = require("luasettings")
 local Menu = require("ui/widget/menu")
 local MultiInputDialog = require("ui/widget/multiinputdialog")
 local NetworkMgr = require("ui/network/manager")
+local Notification = require("ui/widget/notification")
 local rapidjson = require("rapidjson")
 local TextViewer = require("ui/widget/textviewer")
 local UIManager = require("ui/uimanager")
@@ -34,6 +35,7 @@ local default_settings = {
     backend_url = "",
     access_token = "",
     privacy_consent = false,
+    check_updates = true,
 }
 
 local evidence_kind_titles = {
@@ -82,6 +84,34 @@ function CharacterBrain:onCloseDocument()
     if self.ui and self.ui.highlight then
         self.ui.highlight:removeFromHighlightDialog("07_5_character_brain")
     end
+end
+
+function CharacterBrain:backgroundUpdateCheck()
+    if not self.settings.check_updates then
+        return
+    end
+    require("characterbrain_updater").checkBackground(function(version)
+        Notification:notify(
+            _("Character Brain update available: v") .. version,
+            Notification.SOURCE_ALWAYS_SHOW
+        )
+    end)
+end
+
+function CharacterBrain:onReaderReady()
+    self:backgroundUpdateCheck()
+end
+
+function CharacterBrain:onResume()
+    self:backgroundUpdateCheck()
+end
+
+function CharacterBrain:onLeaveStandby()
+    self:backgroundUpdateCheck()
+end
+
+function CharacterBrain:onNetworkConnected()
+    self:backgroundUpdateCheck()
 end
 
 function CharacterBrain:saveSettings()
@@ -423,6 +453,43 @@ function CharacterBrain:addToMainMenu(menu_items)
                 callback = function()
                     self:deleteCurrentBookData()
                 end,
+            },
+            {
+                text = _("Updates"),
+                sub_item_table = {
+                    {
+                        text = _("Notify when an update is available"),
+                        checked_func = function()
+                            return self.settings.check_updates
+                        end,
+                        callback = function()
+                            self.settings.check_updates = not self.settings.check_updates
+                            self:saveSettings()
+                        end,
+                    },
+                    {
+                        text_func = function()
+                            local Updater = require("characterbrain_updater")
+                            local available = Updater.getAvailableVersion()
+                            if available then
+                                return _("Update available: v") .. available
+                            end
+                            return _("Check for updates")
+                        end,
+                        callback = function()
+                            require("characterbrain_updater").check()
+                        end,
+                    },
+                    {
+                        text_func = function()
+                            return _("Installed version: v")
+                                .. require("characterbrain_updater").getInstalledVersion()
+                        end,
+                        enabled_func = function()
+                            return false
+                        end,
+                    },
+                },
             },
             {
                 text = _("About spoiler safety"),

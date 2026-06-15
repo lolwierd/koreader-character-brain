@@ -68,6 +68,27 @@ Enter:
 - Your server URL, such as `https://character-brain.example.com`
 - The shared backend access token
 
+## Plugin Updates
+
+Character Brain checks the latest stable GitHub Release when a book opens,
+KOReader wakes, or Wi-Fi reconnects. Checks are limited to once per hour.
+
+Use:
+
+```text
+Tools > Character Brain > Updates
+```
+
+to:
+
+- Enable or disable update notifications
+- Check immediately
+- Install a new release and restart KOReader
+
+Updates are downloaded from the release asset named
+`characterbrain.koplugin.zip`. Installation is always user-confirmed; the
+plugin never silently replaces itself.
+
 The plugin appends `/v1/analyze` unless the complete endpoint is entered.
 The access token is stored unencrypted in KOReader's settings directory.
 
