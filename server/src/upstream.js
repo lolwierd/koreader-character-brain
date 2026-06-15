@@ -44,6 +44,7 @@ export async function analyzeWithUpstream(config, query, passages) {
       ],
       temperature: 0,
       max_tokens: config.maxTokens,
+      ...config.extraBody,
     }),
     signal: AbortSignal.timeout(config.timeoutMs),
   });
